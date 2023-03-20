@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Comment">
+
+	<select id="Comment_getComment" parameterType="CommentDTO" resultType="CommentDTO">
+		select A.seq
+				, A.userid
+				, A.comments
+				, to_char(a.regdate, 'yyyy-mm-dd HH24:mi:ss') regdate
+		from comments A
+		where delyn='N' and board_seq=#{board_seq}
+	</select>
+	
+	<insert id="Comment_insert" parameterType="CommentDTO">
+		<selectKey resultType="String" keyProperty="seq" order="BEFORE">
+			select nvl(max(seq), 0)+1 as seq
+			from Comments
+		</selectKey>
+		insert into comments
+		(
+			seq
+			, board_seq
+			, userid
+			, comments
+			, regdate
+			, delyn
+		)
+		values
+		(
+			${seq}
+			, ${board_seq}
+			, #{userid}
+			, #{comments}
+			, sysdate
+			, 'N'
+		)
+	</insert>
+
+
+
+</mapper>

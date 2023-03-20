@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Board">
+	<!-- namespace는 쿼리들간의 아이디 식별에 사용됨(파일명과 유사), 현재는 거의 쓰이지 않음 -->
+	<!-- 아래 태그는 select 쿼리를 이 파일에 저장한다는 뜻. 태그종류는 select, insert, update, delete 
+		id: 쿼리를 식별하기 위한 고유값, 프로젝트를 통틀어 하나만 있어야 함 다른 쿼리 xml 파일에 이 아이디가 있으면 안된다 parameterType: 
+		"클래스명" - 파라미터로 전달될 클래스명을 선언 mybatis-congif.xml의 typealias에서 지정한 클래스명을 사용 
+		원래는 패키지명을 포함한 클래스명을 써야 하나 보통은 typealias를 지정하고 거기에 적힌 값들만 사용 resultType="클래스명" 
+		- 결과를 받아가고자 하는 클래스명을 지정 반환데이터를 resultType에서 지정한 클래스로 객체를 만들고 객체에 setter를 
+		호출해 값을 넣은 다음 ArrayList 객체에 담아 보낸다 만약 DB테이블의 필드명과 클래스 변수명이 다르다면 둘을 연결하기 위해 
+		map이라는 것을 만들어서 전달한다 이 경우 paramMap이나 resultMap을 xml로 만들어 전달해야 한다 -->
+	<!-- 선행 쿼리, 후행 쿼리 : 쿼리를 여러개 묶어서 한꺼번에 처리, MyBatis가 수행함 -->
+
+	<select id="Board_getTotalCnt" parameterType="BoardDTO"
+		resultType="Integer">
+		select count(*)
+		from board
+		where delyn='N'
+	</select>
+
+	<select id="Board_getList" parameterType="BoardDTO"
+		resultType="BoardDTO">
+		select
+			A.seq
+			, A.title
+			, A.userid
+			, nvl(filename1,'') filename1
+			, nvl(filename2,'') filename2
+			, nvl(filename3,'') filename3
+			, to_char(regdate, 'yyyy-MM-dd') regdate
+			, to_char(moddate, 'yyyy-MM-dd') moddate
+			, rnum as num
+			, nvl(hit, 0) hit
+			, A.delyn2
+			, A.group_id
+			, A.depth
+			, A.g_level
+		from (
+			select
+				A.seq
+				, A.title
+				, A.userid
+				, A.contents
+				, A.filename1
+				, A.filename2
+				, A.filename3
+				, A.regdate
+				, A.moddate
+				, A.hit
+				, A.delyn2
+				, A.group_id
+				, A.depth
+				, A.g_level
+				, row_number() over(order by group_id desc, g_level asc) rnum
+				, ceil(row_number() over(order by group_id desc, g_level asc)/#{pgSize})-1 pg
+			from board A
+		   	where delyn='N'
+		) A where pg=#{pg}
+	</select>
+	
+	<select id="Board_getView" parameterType="BoardDTO"
+		resultType="BoardDTO">
+		select 
+		    A.seq
+		    ,A.title
+		    ,A.userid
+		    ,A.contents
+		    ,nvl(A.filename1, '') filename1
+		    ,nvl(A.filename2, '') filename2
+		    ,nvl(A.filename3, '') filename3
+		    ,A.regdate
+		    ,A.moddate 
+		    ,A.hit
+		    ,A.group_id
+		    ,A.depth
+		    ,A.g_level
+	   from board A
+	   where seq = #{seq}
+	</select>
+	
+	<!-- 조회수 증가 쿼리 -->
+	<update id="Board_upCnt" parameterType="BoardDTO">
+		update board set hit=hit+1 where seq=#{seq}
+	</update>
+	
+	<!-- 부모글 글쓰기 -->
+	<insert id="Board_insert" parameterType="BoardDTO">
+		<selectKey resultType="java.lang.String" keyProperty="seq" order="BEFORE">
+		<!-- select 쿼리를 먼저 진행하도록 resultType 반환이 Integer타입 keyProperty 결과 받을 변수 
+				order 진행순서 BEFORE 를 쓰면 먼저 진행된다 -->
+		<!--  # : 데이터가 숫자나 문자면 알아서 ''를 붙여 바인딩해줌
+			  $ : 들어간 값들이 보이긴 하지만 ''를 직접 붙여야 함
+		 -->
+			select nvl(max(seq), 0)+1 as seq
+			from Board
+		</selectKey>
+		insert into board
+		(
+			seq
+			, title
+			, userid
+			, contents
+			, regdate
+			, hit
+			, filename1
+			, filename2
+			, filename3
+			, delyn
+			, group_id
+			, depth
+			, g_level
+		)
+		values
+		(
+			#{seq}
+			, #{title}
+			, #{userid}
+			, #{contents}
+			, sysdate
+			, 0
+			, #{filename1}
+			, #{filename2}
+			, #{filename3}
+			, 'N'
+			, #{seq}	
+			, 0
+			, 1
+			<!-- 부모글은 그룹아이디와 seq가 같아야 한다
+			depth는 0이며, g_level은 1	-->
+		)
+		
+	</insert>
+	<!-- 자식글(답글) 글쓰기 -->
+	<insert id="Board_reply" parameterType="BoardDTO">
+		<selectKey resultType="java.lang.String" keyProperty="seq" order="BEFORE">
+		<!-- select 쿼리를 먼저 진행하도록 resultType 반환이 Integer타입 keyProperty 결과 받을 변수 
+				order 진행순서 BEFORE 를 쓰면 먼저 진행된다 -->
+		<!--  # : 데이터가 숫자나 문자면 알아서 ''를 붙여 바인딩해줌
+			  $ : 들어간 값들이 보이긴 하지만 ''를 직접 붙여야 함
+		 -->
+			select nvl(max(seq), 0)+1 as seq
+			from Board
+		</selectKey>
+		insert into board
+		(
+			seq
+			, title
+			, userid
+			, contents
+			, regdate
+			, hit
+			, filename1
+			, filename2
+			, filename3
+			, delyn
+			, group_id
+			, depth
+			, g_level
+		)
+		values
+		(
+			#{seq}
+			, #{title}
+			, #{userid}
+			, #{contents}
+			, sysdate
+			, 0
+			, #{filename1}
+			, #{filename2}
+			, #{filename3}
+			, 'N'
+			, #{group_id}	-- 부모글의 그룹 아이디	
+			, #{depth}		-- 부모글 depth+1
+			, #{g_level}	-- 부모글 level+1
+			<!-- 부모글은 그룹아이디와 seq가 같아야 한다
+			depth는 0이며, g_level은 1	-->
+		)
+		
+	</insert>
+	
+	<!-- 자신의 부모글보다 레벨이 높은 사람들의 레벨을 하나 더 올리고
+	그 자리에 새로 생성된 자식글이 들어가도록 
+	parameterType의 BoardDTO는 부모글DTO-->
+	<update id="Board_reply_level_update" parameterType="BoardDTO">
+		update board set g_level=g_level+1
+		where group_id=#{group_id} and g_level>#{g_level}
+	</update>
+	
+	<!-- 글 수정 쿼리 -->
+	<update id="Board_modify" parameterType="BoardDTO">
+		update board 
+			set title=#{title}
+				, contents=#{contents}
+				, filename1=#{filename1}
+				, filename2=#{filename2}
+				, filename3=#{filename3}
+				, moddate=sysdate
+		where seq=#{seq}
+	</update>
+
+
+	<!-- 자식글 유무를 식별하는 쿼리
+		 그룹이 같고, depth+1 이상이며, g_level+1 이상인 글이 하나 이상 있는가 판별
+		 카운트가 0이면 자식이 없음  -->
+	<select id="Board_hasChild" parameterType="BoardDTO"
+		resultType="Integer">
+		 select count(*) 
+	    from board
+		where group_id=#{group_id} 
+		      and depth=#{depth}+1
+		      and g_level=#{g_level}+1
+	</select>
+	
+	<!-- 전체 삭제 -->
+	<update id="Board_delete1" parameterType="BoardDTO">
+		update board set delyn='Y' where seq=#{seq}
+	</update>
+	
+	<!-- 자식글이 있어서 삭제되지 않을 때 -->
+	<update id="Board_delete2" parameterType="BoardDTO">
+		update board set delyn2='Y' where seq=#{seq}
+	</update>
+	
+</mapper>

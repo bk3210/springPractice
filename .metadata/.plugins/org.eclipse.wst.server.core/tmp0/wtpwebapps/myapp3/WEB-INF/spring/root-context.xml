@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.1.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+		
+			<!-- Root Context: defines shared resources visible to all other web components -->
+    <!-- DB와 관련된 객체 생성은 반드시 이 파일에서 실시됨, 트랜잭션 처리 등 -->
+	<!-- bean 태그 : 객체를 생성하겠다는 뜻
+		 property : 객체 내부 변수
+		 constructor-arg : 생성자 파라미터 전달
+		 ref : 참조
+		 value : 값
+		 "classpath:" 상수값, src/main/resources<-이 경로를 classpath라고 부름 -->
+	<!-- 아래는 DB 객체 -->
+	<!-- id : 이 객체명으로 접근하겠다는 뜻 -->
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp2.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName">
+			<value>oracle.jdbc.driver.OracleDriver</value>
+		</property>
+		<property name="url">
+			<value>jdbc:oracle:thin:@127.0.0.1:1521:xe</value>
+		</property>
+		<property name="username">
+			<value>user01</value>
+		</property>
+		<property name="password">
+			<value>1234</value>
+		</property>
+	</bean>
+	
+	<!-- property name : 위 bean id와 같다 -->
+	 <!--  mybatis 라이브러리랑 연결하기
+	 classpath:scr/main/resource 이 경로로 mybatis 설정파일을 연동하겠다는 뜻  -->
+	 <!-- 보통 클래스명에 Factory가 붙어 있으면 공장, 즉 객체를 만들어내는 역할을 함 -->		
+	  <bean id="sqlSessionFactory"     class="org.mybatis.spring.SqlSessionFactoryBean">
+    	<property name="dataSource"   	ref = "dataSource"></property>
+    	<property name="configLocation"   value="classpath:mybatis/mybatis-config.xml"/>
+    </bean>
+    
+    
+    <!--  classpath :상수값 , resource 폴더
+    	property : 메소드를 뜻함	set 변수명을 호출
+    	constructor-arg : 생성자를 호출
+    	index=0은 0번째 파라미터에 값을 넣겠다는뜻
+    	value : 값
+    	ref : 객체 전달시 참조 -->
+    <bean id="sm"   class="org.mybatis.spring.SqlSessionTemplate">
+    	<constructor-arg index="0"	ref="sqlSessionFactory" >
+    	</constructor-arg>
+   </bean>
+   
+     <!-- 트랜잭션 처리 -->
+  <!--  <bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="insert*" propagation="REQUIRED" rollback-for="Exception"/>
+			<tx:method name="update*" propagation="REQUIRED" rollback-for="Exception"/>
+			<tx:method name="delete*" propagation="REQUIRED" rollback-for="Exception"/>
+		</tx:attributes>
+	</tx:advice> -->
+	
+	<!-- DAOImpl 만들지 않고 mapper를 이용해서 interface만 남기고 싶을 때
+	Spring이 아닌 MyBatis(3.0 버전)가 동작하는 것 -->
+	<mybatis-spring:scan base-package="com.kosa.myapp3.mapper"/>
+	
+   
+   
+</beans>

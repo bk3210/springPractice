@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+	<!-- 스프링에 관련된 설정파일들, DB에 관련한 것만 root-context.xml에서 처리함 -->
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- Enables the Spring MVC @Controller programming model
+		Servlet : (기존)board.do?cmd=limit 이런 식으로 경로값을 파라미터로 던져줌
+		Controller : view와 model을 연결시키는 역할을 함
+		Service : model
+		DAO : model 
+		
+		한 화면에서 여러개의 테이블에 데이터를 한꺼번에 넣거나, 단순히 DB 데이터를 읽고 쓰는 것 이외에 복잡한 작업이 필요할 때
+		DAO는 하나의 테이블만, 그리고 단순히 데이터를 읽고 쓰는 역할만 담당함
+		한 화면이 여러 개의 테이블에 접근하려면 여러 개의 DAO가 필요하고 Controller 통제가 어려워짐
+		(Controller는 최대한 단순하게 작성해야 한다, 복잡한 업무를 하면 안 된다) 
+			-> Service라는 중간단계를 만들어냄
+			Service가 DAO에게 데이터를 읽고 쓰는 작업을 수행하도록 요청 보낸다 (총 3단계)
+			사장(Controller) - 직원(DAO) : 사업의 규모가 작을 때는 괜찮음, 일이 많아지면 직원의 수도 늘어남
+			사장(Controller) - 중간 관리직(Service) - 직원1.....n(DAO)
+			현재는 거의 모든 개발이 Service 단계를 포함시키는 형태로 진행된다
+			
+		스프링의 가장 큰 특징 : DI(Dependency Injection, 의존성 주입, 제어의 역행)
+		(예)목욕탕 : 손님 입장 - 입장시 보관함 생성 - 손님이 나갈 때 보관함 폐기 -> 비효율적인 구조(기존 JSP개발 방식)
+					 보관함을 미리 여러개 생성 - 손님 입장시 번호표 할당 
+					 	-> Controller / Service / DAO를 미리 만들어 놓고 요청이 들어올 때 참조를 전달함
+					 	   작업이 끝나면 반납함
+			Spring Framework가 하는 일은 객체를 미리 만들어놓고 요청에 따라 관리하는 역할
+			우리가 만들어서 스프링에게 전달하는 방식이 아닌, 스프링이 객체를 만들어서 참조를 전달하는 구조
+			우리는 Class를 만들되 객체를 생성하지 않는다
+			
+			그럼 누가 객체를 만드느냐?
+		Java 1.5버전 이전까지는 xml 파일에 객체를 생성해서 연결해줄 것을 일일이 지정해 주는 방식
+		Java 1.5버전이 만들어지면서 제네릭, 어노테이션 개념이 추가됨
+		@Controller
+		@Service
+		@Repository - DAO
+		<annotation-driven /> : 프로젝트 전체를 돌며 위 어노테이션이 적힌 곳을 찾아가서 객체를 만들어주는 역할을 하는 태그
+		context:component-scan base-package="com.kosa.myapp"
+		-> com.kosa.myapp 하위에 위치한 패키지 폴더에만 annotation-driven이 돌아다닐 수 있음
+		-->
+	<annotation-driven />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+	<!-- css 또는 이미지, 자바스크립트 URL을 외부로 보냄 -->
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<!-- beans : 콩깍지, bean : 콩
+		 "객체는 콩깍지 안에 들어가 있는 콩 같은 존재이다"
+		 "객체가 모인 것이 콩깍지가 된다"
+		 beans:bean은 InternalResourceViewResolver를 통해 클래스 객체를 생성하게 하는 명렁어
+		 property : 변수명
+		 InternalResourceViewResolver 안에 prefix, suffix라는 변수 두 개가 존재
+		 JSP페이지를 WEB-INF/views 아래에 두겠다는 뜻
+		 		  -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	<!-- 자바 1.5 이전 버전에서는 모든 객체를 생성할 때마다 beans:bean 태그를 xml에 일일이 다 적어줬어야 했음 -->
+	
+	<context:component-scan base-package="com.kosa.myapp" />
+	
+	
+	
+</beans:beans>

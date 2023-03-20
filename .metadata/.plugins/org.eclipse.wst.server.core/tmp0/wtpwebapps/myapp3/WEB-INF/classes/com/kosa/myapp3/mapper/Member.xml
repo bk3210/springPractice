@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kosa.myapp3.mapper.MemberMapper">
+
+	<insert id="Member_insert" parameterType="MemberDTO">
+		<selectKey resultType="String" keyProperty="member_id" order="BEFORE">
+			select nvl(max(member_id), 0)+1 as member_id
+			from tb_member2
+		</selectKey>
+		insert into tb_member2
+		(
+			member_id
+			, user_id
+			, password
+			, user_name
+			, email
+			, phone
+			, nickname
+			, zipcode
+			, address1
+			, address2
+			, regdate
+		)
+		values
+		(
+			#{member_id}
+			, #{user_id}
+			, #{password}
+			, #{user_name}
+			, #{email}
+			, #{phone}
+			, #{nickname}
+			, #{zipcode}
+			, #{address1}
+			, #{address2}
+			, sysdate
+		)
+	</insert>
+	
+	<!-- 아이디 중복체크 -->
+	<select id="Member_idcheck" parameterType="MemberDTO" resultType="Integer">
+		select count(*)
+		from tb_member2
+		where user_id=#{user_id}
+	</select>
+	
+	<!-- 로그인하기 : id로만 데이터를 추적하고 id, pw 일치여부는 따로 처리 -->
+	<select id="Member_login" parameterType="MemberDTO" resultType="MemberDTO">
+		select *
+		from tb_member2
+		where user_id=#{user_id}
+	</select>
+
+</mapper>

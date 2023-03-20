@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Member">
+	<!-- namespace는 쿼리들간의 아이디 식별에 사용됨(파일명과 유사), 현재는 거의 쓰이지 않음 -->
+	<!-- 아래 태그는 select 쿼리를 이 파일에 저장한다는 뜻. 태그종류는 select, insert, update, delete 
+		id: 쿼리를 식별하기 위한 고유값, 프로젝트를 통틀어 하나만 있어야 함
+			다른 쿼리 xml 파일에 이 아이디가 있으면 안된다
+		parameterType: "클래스명" - 파라미터로 전달될 클래스명을 선언
+			mybatis-congif.xml의 typealias에서 지정한 클래스명을 사용 
+			원래는 패키지명을 포함한 클래스명을 써야 하나 보통은 typealias를 지정하고
+			거기에 적힌 값들만 사용
+			
+		resultType="클래스명" - 결과를 받아가고자 하는 클래스명을 지정
+			반환데이터를 resultType에서 지정한 클래스로 객체를 만들고
+			객체에 setter를 호출해 값을 넣은 다음 ArrayList 객체에 담아 보낸다
+			만약 DB테이블의 필드명과 클래스 변수명이 다르다면 둘을 연결하기 위해 
+			map이라는 것을 만들어서 전달한다
+			이 경우 paramMap이나 resultMap을 xml로 만들어 전달해야 한다 -->
+	<!-- 선행 쿼리, 후행 쿼리 : 쿼리를 여러개 묶어서 한꺼번에 처리, MyBatis가 수행함 -->
+	<insert id="Member_insert" parameterType="MemberDTO">
+	<selectKey resultType="String" keyProperty="m_id" order="BEFORE">
+	<!-- select 쿼리를 먼저 진행하도록 resultType 반환이 Integer타입 keyProperty 결과 받을 변수 
+			order 진행순서 BEFORE 를 쓰면 먼저 진행된다 -->
+		select nvl(max(m_id), 0)+1 as m_id
+		from tb_member
+	</selectKey>
+		insert into tb_member
+		(
+			m_id
+			, m_userid
+			, m_name
+			, m_password
+			, m_phone
+			, m_email
+		)
+		values
+		(
+			#{m_id}
+			, #{m_userid}
+			, #{m_name}
+			, #{m_password}
+			, #{m_phone}
+			, #{m_email}
+		)
+	</insert>
+	
+	<!-- m_userid 중복체크하기 -->
+	<select id="Member_idcheck" parameterType="MemberDTO" resultType="Integer">
+		select count(*) from tb_member where m_userid=#{m_userid}
+	</select>
+	
+	<!-- login : 아이디, 패스워드로 정보 가져오기 -->
+	<select id="Member_login" parameterType="MemberDTO" resultType="MemberDTO">
+		select *
+		from tb_member
+		where m_userid=#{m_userid}
+	</select>
+	
+	<!-- findid : 이름, 이메일로 정보 가져오기 -->
+	<select id="Member_findid" parameterType="MemberDTO" resultType="MemberDTO">
+		select m_userid, m_name, m_email
+		from tb_member
+		where m_name=#{m_name} and m_email=#{m_email}
+	</select>
+	
+	<!-- findpassword : 아이디, 이메일로 정보 가져오기 -->
+	<select id="Member_findpassword" parameterType="MemberDTO" resultType="MemberDTO">
+		select m_userid, m_password, m_email
+		from tb_member
+		where m_userid=#{m_userid} and m_email=#{m_email}
+	</select>
+	
+	<!-- memberlist -->
+	<select id="Member_listdata" parameterType="MemberDTO" resultType="MemberDTO">
+	select A.*
+	from(
+		select m_id
+			, m_userid
+			, m_name
+			, m_phone
+			, m_email
+			, m_password
+			, row_number() over(order by m_id desc) num
+			, ceil(row_number() over(order by m_id desc)/10)-1 as pg
+			from tb_member
+	)A
+	where pg=#{pg}
+		<!-- select m_id, m_userid, m_password, m_name, m_phone, 
+				m_email, num
+		from (
+			select m_id
+			, m_userid
+			, m_password
+			, m_name
+			, m_phone
+			, m_email
+			, row_number() over(order by m_id desc) num
+			, ceil(row_number() over(order by m_id desc)/#{pgSize})-1 pg
+			from tb_member A
+		)A where A.pg=#{pg} -->
+	</select>
+	
+	<!-- 페이징 처리 -->
+	<select id="Member_getTotalCnt" parameterType="MemberDTO"
+	resultType="Integer">
+		select count(*)
+		from tb_member
+	</select>
+		
+	</mapper>

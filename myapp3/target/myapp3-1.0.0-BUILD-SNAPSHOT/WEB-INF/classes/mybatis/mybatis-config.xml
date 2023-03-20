@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+<!--  원 클래스명(패키지명 포함)이 너무 길어지는 걸 방지하기 위해 별명을 붙여주는 태그  -->
+<typeAliases>
+	<typeAlias alias="BoardDTO" type="com.kosa.myapp3.board.BoardDTO"	/>
+	
+</typeAliases>
+
+<mappers>
+	<mapper resource="/com/kosa/myapp3/mapper/Board.xml"	/>
+
+</mappers>
+	
+</configuration>

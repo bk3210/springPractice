@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Guestbook">
+	<!-- namespace는 쿼리들간의 아이디 식별에 사용됨(파일명과 유사), 현재는 거의 쓰이지 않음 -->
+	<!-- 아래 태그는 select 쿼리를 이 파일에 저장한다는 뜻. 태그종류는 select, insert, update, delete 
+		id: 쿼리를 식별하기 위한 고유값, 프로젝트를 통틀어 하나만 있어야 함
+			다른 쿼리 xml 파일에 이 아이디가 있으면 안된다
+		parameterType: "클래스명" - 파라미터로 전달될 클래스명을 선언
+			mybatis-congif.xml의 typealias에서 지정한 클래스명을 사용 
+			원래는 패키지명을 포함한 클래스명을 써야 하나 보통은 typealias를 지정하고
+			거기에 적힌 값들만 사용
+			
+		resultType="클래스명" - 결과를 받아가고자 하는 클래스명을 지정
+			반환데이터를 resultType에서 지정한 클래스로 객체를 만들고
+			객체에 setter를 호출해 값을 넣은 다음 ArrayList 객체에 담아 보낸다
+			만약 DB테이블의 필드명과 클래스 변수명이 다르다면 둘을 연결하기 위해 
+			map이라는 것을 만들어서 전달한다
+			이 경우 paramMap이나 resultMap을 xml로 만들어 전달해야 한다 -->
+	<select id="Guestbook_getList" parameterType="GuestbookDTO"
+		resultType="GuestbookDTO">
+		select seq
+		, title
+		, writer
+		, contents
+		, wdate
+		, hit
+		from tb_guestbook
+
+	</select>
+</mapper>

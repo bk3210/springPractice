@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+<!--  원 클래스명(패키지명 포함)이 너무 길어지는 걸 방지하기 위해 별명을 붙여주는 태그  -->
+<typeAliases>
+    	<typeAlias alias="GuestbookDTO" type="com.kosa.mycompany.guestbook.GuestbookDTO"/>			
+    	<typeAlias alias="MemberDTO" type="com.kosa.mycompany.member.MemberDTO"/>
+    	<typeAlias alias="GalleryDTO" type="com.kosa.mycompany.gallery.GalleryDTO"/>
+    	<typeAlias alias="HomeDTO" type="com.kosa.mycompany.home.HomeDTO"/>
+    	<typeAlias alias="TestDTO" type="com.kosa.mycompany.test.TestDTO1"/>
+			
+    	<typeAlias alias="ScoreDTO" type="com.kosa.mycompany.score.ScoreDTO"/>
+	</typeAliases>
+	<mappers>
+	<!-- mapper : sql 쿼리를 두는 곳, Guestbook.xml 파일을 만들어야 한다 -->
+	  <mapper resource=	"/com/kosa/mycompany/mapper/Guestbook.xml"/>
+	  <mapper resource=	"/com/kosa/mycompany/mapper/Member.xml"/>
+	  <mapper resource=	"/com/kosa/mycompany/mapper/Gallery.xml"/>
+	  <mapper resource=	"/com/kosa/mycompany/mapper/Home.xml"/>
+	  <mapper resource=	"/com/kosa/mycompany/mapper/Test.xml"/>
+
+	  <mapper resource=	"/com/kosa/mycompany/mapper/Score.xml"/>
+	</mappers>
+	
+</configuration>
